@@ -33,7 +33,7 @@ const MONTH_KEYS: TranslationKey[] = [
 
 /** Calm green ramp; step 0 is the neutral "no activity" tone. */
 const CELL_LEVELS = [
-  "bg-zinc-100 dark:bg-zinc-800",
+  "bg-panel-2",
   "bg-emerald-100 dark:bg-emerald-950",
   "bg-emerald-200 dark:bg-emerald-900",
   "bg-emerald-400 dark:bg-emerald-700",
@@ -129,27 +129,27 @@ export function ActivityCalendar() {
   const cells = columns.flat();
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-zinc-100 px-4 py-3 dark:border-zinc-800/70">
-        <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+    <div className="anim-in overflow-hidden rounded-xl border border-hairline bg-panel">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-hairline-soft px-4 py-3">
+        <span className="text-xs font-semibold text-ink">
           {t("calendar.title")}
         </span>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-3">
           <span>
             {t("calendar.activeDays")}{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            <span className="font-medium text-ink-2">
               {formatCount(totals.active_days)}
             </span>
           </span>
           <span>
             {t("calendar.totalTokens")}{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            <span className="font-medium text-ink-2">
               {formatCount(totals.tokens)}
             </span>
           </span>
           <span>
             {t("calendar.totalRequests")}{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
+            <span className="font-medium text-ink-2">
               {formatCount(totals.requests)}
             </span>
           </span>
@@ -163,7 +163,7 @@ export function ActivityCalendar() {
             {monthLabels.map((label, index) => (
               <span
                 key={index}
-                className="overflow-visible whitespace-nowrap text-[10px] leading-none text-zinc-400"
+                className="overflow-visible whitespace-nowrap text-[10px] leading-none text-ink-3"
               >
                 {label ?? ""}
               </span>
@@ -176,7 +176,7 @@ export function ActivityCalendar() {
               {WEEKDAY_KEYS.map((key, index) => (
                 <span
                   key={key}
-                  className="flex h-3.5 items-center text-[10px] leading-none text-zinc-400"
+                  className="flex h-3.5 items-center text-[10px] leading-none text-ink-3"
                 >
                   {LABELED_ROWS.has(index) ? t(key) : ""}
                 </span>
@@ -194,7 +194,7 @@ export function ActivityCalendar() {
                     title={cellTitle(day, t)}
                     aria-label={cellTitle(day, t)}
                     className={clsx(
-                      "h-3.5 w-3.5 rounded-sm transition-colors hover:ring-1 hover:ring-zinc-400/70",
+                      "h-3.5 w-3.5 rounded-sm transition-all hover:scale-110 hover:ring-1 hover:ring-accent/60",
                       CELL_LEVELS[levelOf(day.tokens, totals.max_tokens)],
                     )}
                   />
@@ -206,7 +206,7 @@ export function ActivityCalendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-end gap-1.5 border-t border-zinc-100 px-4 py-2 text-[10px] text-zinc-400 dark:border-zinc-800/70">
+      <div className="flex items-center justify-end gap-1.5 border-t border-hairline-soft px-4 py-2 text-[10px] text-ink-3">
         <span>{t("calendar.less")}</span>
         {CELL_LEVELS.map((level) => (
           <span key={level} className={clsx("h-3 w-3 rounded-sm", level)} />
