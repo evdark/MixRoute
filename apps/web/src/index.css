@@ -1,0 +1,333 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/* Design tokens — a calm, Codex-flavoured neutral scale.              */
+/* Light is the default; `.dark` flips the whole palette.             */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --mx-bg: #fafafa;
+  --mx-panel: #ffffff;
+  --mx-panel-2: #f4f4f5;
+  --mx-hairline: rgb(0 0 0 / 0.08);
+  --mx-hairline-soft: rgb(0 0 0 / 0.05);
+  --mx-text: #18181b;
+  --mx-text-2: #71717a;
+  --mx-text-3: #a1a1aa;
+  --mx-accent: #19c37d;
+  --mx-accent-soft: rgb(25 195 125 / 0.12);
+  --mx-danger: #ef4444;
+  --mx-warn: #f59e0b;
+
+  color-scheme: light;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    sans-serif;
+}
+
+.dark {
+  --mx-bg: #09090b;
+  --mx-panel: #18181b;
+  --mx-panel-2: #27272a;
+  --mx-hairline: rgb(255 255 255 / 0.08);
+  --mx-hairline-soft: rgb(255 255 255 / 0.05);
+  --mx-text: #fafafa;
+  --mx-text-2: #a1a1aa;
+  --mx-text-3: #71717a;
+  --mx-accent: #19c37d;
+  --mx-accent-soft: rgb(25 195 125 / 0.14);
+  --mx-danger: #f87171;
+  --mx-warn: #fbbf24;
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--mx-bg);
+  --color-panel: var(--mx-panel);
+  --color-panel-2: var(--mx-panel-2);
+  --color-hairline: var(--mx-hairline);
+  --color-hairline-soft: var(--mx-hairline-soft);
+  --color-ink: var(--mx-text);
+  --color-ink-2: var(--mx-text-2);
+  --color-ink-3: var(--mx-text-3);
+  --color-accent: var(--mx-accent);
+  --color-accent-soft: var(--mx-accent-soft);
+  --color-danger: var(--mx-danger);
+  --color-warn: var(--mx-warn);
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--mx-bg);
+  color: var(--mx-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--mx-accent-soft);
+  color: var(--mx-text);
+}
+
+/* Quiet, hairline scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mx-hairline) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--mx-hairline);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--mx-text-3);
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mx-accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                              */
+/* ------------------------------------------------------------------ */
+
+@keyframes mx-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mx-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mx-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  60% {
+    transform: scale(1.012);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mx-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--mx-accent-soft);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes mx-mesh-a {
+  0%,
+  100% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8%, 6%, 0) scale(1.15);
+  }
+}
+
+@keyframes mx-mesh-b {
+  0%,
+  100% {
+    transform: translate3d(6%, 4%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-8%, -6%, 0) scale(0.95);
+  }
+}
+
+@keyframes mx-sheen {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes mx-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes mx-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  95% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Staggered entrance — pair with `mx-delay-*`. */
+.anim-in {
+  animation: mx-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-pop {
+  animation: mx-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-fade {
+  animation: mx-fade-in 0.5s ease both;
+}
+
+.mx-delay-1 {
+  animation-delay: 60ms;
+}
+.mx-delay-2 {
+  animation-delay: 120ms;
+}
+.mx-delay-3 {
+  animation-delay: 180ms;
+}
+.mx-delay-4 {
+  animation-delay: 240ms;
+}
+.mx-delay-5 {
+  animation-delay: 300ms;
+}
+.mx-delay-6 {
+  animation-delay: 360ms;
+}
+
+.anim-pulse-ring {
+  animation: mx-pulse-ring 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.anim-blink {
+  animation: mx-blink 1.6s steps(1, end) infinite;
+}
+
+.anim-bar-grow {
+  transform-origin: left;
+  animation: mx-bar-grow 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Soft aurora blobs behind the overview hero. */
+.mesh-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.mesh-a {
+  background: radial-gradient(closest-side, rgb(25 195 125 / 0.55), transparent 70%);
+  animation: mx-mesh-a 16s ease-in-out infinite;
+}
+
+.mesh-b {
+  background: radial-gradient(closest-side, rgb(56 189 248 / 0.4), transparent 70%);
+  animation: mx-mesh-b 20s ease-in-out infinite;
+}
+
+.dark .mesh-a {
+  opacity: 0.35;
+}
+
+.dark .mesh-b {
+  opacity: 0.25;
+}
+
+/* Skeleton shimmer for loading placeholders. */
+.sheen {
+  background: linear-gradient(
+    90deg,
+    var(--mx-panel-2) 25%,
+    color-mix(in srgb, var(--mx-panel-2) 55%, var(--mx-text-3)) 50%,
+    var(--mx-panel-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: mx-sheen 1.6s linear infinite;
+}
+
+/* Grain overlay for depth on hero surfaces (pure CSS, no assets). */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(var(--mx-hairline-soft) 1px, transparent 1px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
