@@ -49,7 +49,16 @@ async function main(): Promise<void> {
   app.log.info(`OpenAI API: http://localhost:${config.port}/v1`);
 }
 
-main().catch((err) => {
+main().catch((err: unknown) => {
+  const code = (err as NodeJS.ErrnoException | undefined)?.code;
+  if (code === "EADDRINUSE") {
+    console.error(
+      `\n  ✗ Порт ${config.port} уже занят (EADDRINUSE).\n` +
+        `    → ` + `mixr подберёт свободный порт автоматически — просто запустите \`mixr\`\n` +
+        `    → или укажите свой: \`mixr --port ${config.port + 1}\` / \`PORT=${config.port + 1} pnpm start\``,
+    );
+    process.exit(1);
+  }
   console.error(err);
   process.exit(1);
 });

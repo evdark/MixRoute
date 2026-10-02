@@ -1,6 +1,6 @@
 {
   "name": "mixroute",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Simple AI Router — one model, multiple API keys, one endpoint, persistent context, automatic failover.",
   "type": "module",

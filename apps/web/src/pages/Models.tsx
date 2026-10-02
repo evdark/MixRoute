@@ -30,6 +30,8 @@ interface ModelModalProps {
   mode: "create" | "edit";
   initial?: Model;
   onSaved: () => void;
+  /** Called right after a successful create: chain into the provider wizard. */
+  onAddProvider?: (model: Model) => void;
   onClose: () => void;
 }
 
@@ -40,12 +42,14 @@ function parseCost(value: string): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-function ModelModal({ mode, initial, onSaved, onClose }: ModelModalProps) {
+function ModelModal({ mode, initial, onSaved, onAddProvider, onClose }: ModelModalProps) {
   const { t } = useT();
   const [name, setName] = useState(initial?.name ?? "");
   const [inputCost, setInputCost] = useState(initial ? String(initial.input_cost) : "");
   const [outputCost, setOutputCost] = useState(initial ? String(initial.output_cost) : "");
   const [aliasesText, setAliasesText] = useState("");
+  /** Set right after a create: we offer the "add a provider" next step. */
+  const [created, setCreated] = useState<Model | null>(null);
 
   const save = useAction(async () => {
     const parsedInput = parseCost(inputCost);
@@ -80,7 +84,45 @@ function ModelModal({ mode, initial, onSaved, onClose }: ModelModalProps) {
 
   async function submit() {
     const outcome = await save.run();
-    if (outcome.ok) onSaved();
+    if (!outcome.ok) return;
+    const model = outcome.data?.model;
+    if (mode === "create" && model && onAddProvider) {
+      // Offer the natural next step instead of silently closing.
+      setCreated(model);
+      return;
+    }
+    onSaved();
+  }
+
+  if (created) {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        title={t("modelModal.created")}
+        width="sm"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={onSaved}>
+              {t("common.done")}
+            </Button>
+            <Button variant="primary" onClick={() => onAddProvider?.(created)}>
+              {t("modelModal.addProviderNow")}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 text-accent">
+            <Plus aria-hidden className="h-6 w-6" />
+          </div>
+          <p className="text-sm font-medium text-ink">
+            {t("modelModal.createdName", { name: created.name })}
+          </p>
+          <p className="text-xs text-ink-3">{t("modelModal.createdHint")}</p>
+        </div>
+      </Modal>
+    );
   }
 
   return (
@@ -290,6 +332,8 @@ export default function ModelsPage() {
 
   const [modelModal, setModelModal] = useState<ModelModalState | null>(null);
   const [providerModal, setProviderModal] = useState<ProviderModalState | null>(null);
+  /** Freshly created model not yet reflected by `reload()` — passed along. */
+  const [createdModel, setCreatedModel] = useState<Model | null>(null);
   const [confirmSpec, setConfirmSpec] = useState<ConfirmSpec | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [aliasOpen, setAliasOpen] = useState<number | null>(null);
@@ -572,12 +616,24 @@ export default function ModelsPage() {
             setModelModal(null);
             reload();
           }}
+          onAddProvider={(model) => {
+            // Chain straight into the provider wizard with the fresh model
+            // preselected as the mapping target.
+            setModelModal(null);
+            setCreatedModel(model);
+            setProviderModal({ mode: "create", modelId: model.id });
+            reload();
+          }}
         />
       )}
 
       {providerModal && (
         <ProviderForm
-          models={models}
+          models={
+            createdModel && !models.some((model) => model.id === createdModel.id)
+              ? [...models, createdModel]
+              : models
+          }
           mode={providerModal.mode}
           initial={providerModal.provider}
           initialModelId={providerModal.modelId}

@@ -4,11 +4,12 @@
  *
  * Usage:
  *   mixr                 build (if needed) and start the router
- *   mixr --port 4000     start on a custom port
+ *   mixr --port 4000     start on a custom port (auto-picks the next free one if busy)
  *   mixr --data ./data   use a custom data directory
  *   mixr --open          open the dashboard in the browser when ready
  *   mixr --dev           run in dev mode (tsx watch + vite)
  *   mixr --no-build      skip the build step
+ *   mixr --dry-run       print banner + resolved port, then exit (no server)
  *   mixr --help          show this help
  *   mixr --version       show the version
  *
@@ -17,6 +18,7 @@
 
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -35,11 +37,13 @@ const HELP = `
 
   Options:
     -p, --port <n>      HTTP port (default: 3000, or $PORT)
+                        busy port? the next free one is picked automatically
     -d, --data <dir>    data directory (default: ./.data, or $DATA_DIR)
         --host <addr>   bind address (default: 0.0.0.0, or $HOST)
         --open          open the dashboard in your browser when ready
         --dev           run in development mode (hot reload)
         --no-build      do not build before starting
+        --dry-run       print the banner and the port that would be used, then exit
     -h, --help          show this help
     -v, --version       print the version
 
@@ -57,6 +61,7 @@ function parseArgs(argv) {
     open: false,
     dev: false,
     build: true,
+    dryRun: false,
     help: false,
     version: false,
   };
@@ -92,6 +97,9 @@ function parseArgs(argv) {
       case "--no-build":
         opts.build = false;
         break;
+      case "--dry-run":
+        opts.dryRun = true;
+        break;
       default:
         if (arg.startsWith("-")) {
           console.error(`  ✗ unknown option: ${arg}\n`);
@@ -111,15 +119,18 @@ const isTTY = process.stdout.isTTY;
 const paint = (code, text) => (isTTY ? `\x1b[${code}m${text}\x1b[0m` : text);
 const dim = (text) => paint("2", text);
 const cyan = (text) => paint("36", text);
+const green = (text) => paint("32", text);
+const yellow = (text) => paint("33", text);
+const bold = (text) => paint("1", text);
 
 function banner() {
   const art = [
-    "   ███████╗██╗░░██╗ ██████╗ ██████╗ ███╗   ██╗",
-    "   ██╔════╝╚██╗██╔╝██╔════╝██╔═══██╗████╗  ██║",
-    "   █████╗░░░╚███╔╝░██║░░░░░██║░░░██║██╔██╗██║",
-    "   ██╔══╝░░░██╔██╗░██║░░░░░██║░░░██║██║╚████║",
-    "   ███████╗██╔╝╚██╗╚██████╗╚██████╔╝██║░╚███║",
-    "   ╚══════╝╚═╝░░╚═╝░╚═════╝░╚═════╝╚═╝░░╚══╝",
+    "   ███╗   ███╗ ██╗ ██╗  ██╗ ██████╗",
+    "   ████╗ ████║ ██║ ╚██╗██╔╝ ██╔══██╗",
+    "   ██╔████╔██║ ██║  ╚███╔╝  ██████╔╝",
+    "   ██║╚██╔╝██║ ██║ ██╔██╗  ██╔══██╗",
+    "   ██║ ╚═╝ ██║ ██║██╔╝ ██╗ ██║  ██║",
+    "   ╚═╝     ╚═╝ ╚═╝╚═╝  ╚═╝ ╚═╝  ╚═╝",
   ];
   console.log("\n" + art.map((line) => cyan(line)).join("\n"));
   console.log(
@@ -129,6 +140,29 @@ function banner() {
       dim(`v${pkg.version}`),
   );
   console.log("");
+}
+
+/** Printed once the router is up: the essentials, minus the noise. */
+function startupGuide(port) {
+  const base = `http://localhost:${port}`;
+  const lines = [
+    "",
+    "  " + bold("MixRoute готов к работе 🎉"),
+    "",
+    "  📊  Дашборд      " + cyan(base),
+    "  🔌  Base URL     " + cyan(`${base}/v1`),
+    "  🩺  Health       " + cyan(`${base}/health`),
+    "",
+    "  " + dim("1. откройте дашборд → введите пароль (admin)"),
+    "  " + dim("2. 🧠 Models → добавьте модель, 🔌 Providers → привяжите провайдера"),
+    "  " + dim("3. ⚙️ Settings → API keys → создайте ключ и говорите с моделью"),
+    "",
+    "  💡 " + dim("совет: `mixr --open` откроет дашборд сам, `mixr --help` — все команды"),
+    "",
+    "  " + green("Good luck in vibecode! ;3"),
+    "",
+  ];
+  console.log(lines.join("\n"));
 }
 
 /* ------------------------------------------------------------------ */
@@ -176,7 +210,7 @@ function openBrowser(url) {
       ? ["open", [url]]
       : process.platform === "win32"
         ? ["cmd", ["/c", "start", "", url]]
-        : ["xdg-open", [url]];
+        : ["xdg-open", url];
   if (!commandExists(opener[0])) return;
   const child = spawn(opener[0], opener[1], { stdio: "ignore", detached: true });
   child.on("error", () => {});
@@ -202,6 +236,32 @@ function waitForHealth(port, timeoutMs = 30_000) {
   });
 }
 
+/** Is `port` free on `host`? Binds then immediately releases the probe. */
+function portIsFree(port, host) {
+  return new Promise((resolve) => {
+    const probe = net.createServer();
+    probe.once("error", () => resolve(false));
+    probe.once("listening", () => probe.close(() => resolve(true)));
+    probe.listen({ port, host });
+  });
+}
+
+/**
+ * Walk up from `startPort` until a free one is found (bounded so a broken
+ * range cannot loop forever). Returns `{ port, moved }`.
+ */
+async function pickPort(startPort, host, maxTries = 20) {
+  for (let offset = 0; offset < maxTries; offset += 1) {
+    const candidate = startPort + offset;
+    if (candidate > 65535) break;
+    // eslint-disable-next-line no-await-in-loop
+    if (await portIsFree(candidate, host)) {
+      return { port: candidate, moved: offset > 0 };
+    }
+  }
+  return { port: null, moved: false };
+}
+
 /* ------------------------------------------------------------------ */
 /* Main                                                                */
 /* ------------------------------------------------------------------ */
@@ -220,12 +280,41 @@ if (opts.version) {
 banner();
 ensureDeps();
 
-const port = String(opts.port ?? 3000);
+const requestedPort = Number(opts.port ?? 3000);
+if (!Number.isInteger(requestedPort) || requestedPort < 1 || requestedPort > 65535) {
+  console.error(`  ✗ invalid port: ${opts.port}`);
+  process.exit(2);
+}
+const bindHost = opts.host ?? "0.0.0.0";
+
+const portInfo = await pickPort(requestedPort, bindHost);
+if (portInfo.port === null) {
+  console.error(
+    `  ✗ no free port found in ${requestedPort}–${requestedPort + 19} (${bindHost})`,
+  );
+  process.exit(1);
+}
+const port = String(portInfo.port);
+
 const env = {
-  ...(opts.port ? { PORT: port } : {}),
+  PORT: port,
   ...(opts.host ? { HOST: opts.host } : {}),
   ...(opts.data ? { DATA_DIR: path.resolve(process.cwd(), opts.data) } : {}),
 };
+
+if (portInfo.moved) {
+  console.log(
+    yellow(`  ⚠ порт ${requestedPort} занят — переключаюсь на ${port}`) +
+      dim(" (следующий свободный)"),
+  );
+  console.log("");
+}
+
+if (opts.dryRun) {
+  console.log(dim(`  ⋯ dry run: сервер не запускается, выбрал бы порт ${port} (${bindHost})`));
+  console.log(`     дашборд: ${cyan(`http://localhost:${port}`)}\n`);
+  process.exit(0);
+}
 
 if (opts.dev) {
   console.log(dim("  ⋯ dev mode: server (tsx watch) + web (vite)"));
@@ -256,14 +345,18 @@ if (opts.dev) {
     env: { ...process.env, PORT: port, ...env },
   });
 
-  if (opts.open) {
-    void waitForHealth(Number(port) || 3000).then((ok) => {
-      if (ok) openBrowser(`http://localhost:${port}`);
-    });
-  }
-
   const forward = (signal) => () => child.kill(signal);
   process.on("SIGINT", forward("SIGINT"));
   process.on("SIGTERM", forward("SIGTERM"));
+
+  // Print the mini-guide as soon as the router answers /health.
+  let guideShown = false;
+  void waitForHealth(Number(port)).then((ok) => {
+    if (!ok || guideShown) return;
+    guideShown = true;
+    startupGuide(port);
+    if (opts.open) openBrowser(`http://localhost:${port}`);
+  });
+
   child.on("exit", (code) => process.exit(code ?? 0));
 }

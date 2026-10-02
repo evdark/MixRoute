@@ -100,16 +100,29 @@ npm link          # ← puts `mixr` into your PATH
 
 ```bash
 $ mixr
-   ███████╗██╗░░██╗ ██████╗ ██████╗ ███╗   ██╗
-   ...banner...
-   one model → many providers → one endpoint  v0.1.0
+   ███╗   ███╗ ██╗ ██╗  ██╗ ██████╗
+   ████╗ ████║ ██║ ╚██╗██╔╝ ██╔══██╗
+   ██╔████╔██║ ██║  ╚███╔╝  ██████╔╝
+   ██║╚██╔╝██║ ██║ ██╔██╗  ██╔══██╗
+   ██║ ╚═╝ ██║ ██║██╔╝ ██╗ ██║  ██║
+   ╚═╝     ╚═╝ ╚═╝╚═╝  ╚═╝ ╚═╝  ╚═╝
+   one model → many providers → one endpoint  v0.2.0
 
-  MixRoute listening on http://localhost:3000
-  Dashboard:  http://localhost:3000
-  OpenAI API: http://localhost:3000/v1
+  MixRoute готов к работе 🎉
+
+  📊  Дашборд      http://localhost:3000
+  🔌  Base URL     http://localhost:3000/v1
+  🩺  Health       http://localhost:3000/health
+
+  💡 совет: `mixr --open` откроет дашборд сам, `mixr --help` — все команды
+
+  Good luck in vibecode! ;3
 ```
 
 `mixr` builds on first run, so `pnpm build` is optional. Ctrl+C stops it gracefully.
+
+> 🔌 **Порт занят?** Не беда — `mixr` сам возьмёт следующий свободный
+> (`⚠ порт 3000 занят — переключаюсь на 3001`) и напишет итоговый адрес.
 
 <details>
 <summary>🎤 <code>mixr --help</code></summary>
@@ -118,11 +131,13 @@ $ mixr
 mixr [options]
 
   -p, --port <n>      HTTP port (default: 3000, or $PORT)
+                      busy port? the next free one is picked automatically
   -d, --data <dir>    data directory (default: ./.data, or $DATA_DIR)
       --host <addr>   bind address (default: 0.0.0.0, or $HOST)
       --open          open the dashboard in the browser when ready
       --dev           run in dev mode (tsx watch + vite)
       --no-build      skip the build step
+      --dry-run       print banner + resolved port, then exit
   -h, --help          show help
   -v, --version       print the version
 ```

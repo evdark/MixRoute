@@ -125,14 +125,27 @@ mixr
 ```
 
 ```
-   ███████╗██╗░░██╗ ██████╗ ██████╗ ███╗   ██╗
-   ...banner...
-   one model → many providers → one endpoint  v0.1.0
+   ███╗   ███╗ ██╗ ██╗  ██╗ ██████╗
+   ████╗ ████║ ██║ ╚██╗██╔╝ ██╔══██╗
+   ██╔████╔██║ ██║  ╚███╔╝  ██████╔╝
+   ██║╚██╔╝██║ ██║ ██╔██╗  ██╔══██╗
+   ██║ ╚═╝ ██║ ██║██╔╝ ██╗ ██║  ██║
+   ╚═╝     ╚═╝ ╚═╝╚═╝  ╚═╝ ╚═╝  ╚═╝
+   one model → many providers → one endpoint  v0.2.0
 
-  MixRoute listening on http://localhost:3000
-  Dashboard:  http://localhost:3000
-  OpenAI API: http://localhost:3000/v1
+  MixRoute готов к работе 🎉
+
+  📊  Дашборд      http://localhost:3000
+  🔌  Base URL     http://localhost:3000/v1
+  🩺  Health       http://localhost:3000/health
+
+  💡 совет: `mixr --open` откроет дашборд сам, `mixr --help` — все команды
+
+  Good luck in vibecode! ;3
 ```
+
+> 🔌 Порт 3000 занят? `mixr` сам переключится на следующий свободный и
+> напечатает `⚠ порт 3000 занят — переключаюсь на 3001`.
 
 | | |
 | --- | --- |
@@ -149,12 +162,14 @@ mixr
 ```
 mixr [options]
 
-  -p, --port <n>      порт        (по умолчанию 3000, или $PORT)
+  -p, --port <n>      порт        (по умолчанию 3000, или $PORT;
+                                    занят — берётся следующий свободный)
   -d, --data <dir>    папка данных (по умолчанию ./.data, или $DATA_DIR)
       --host <addr>   адрес привязки (по умолчанию 0.0.0.0, или $HOST)
       --open          открыть дашборд в браузере, когда поднимется
       --dev           режим разработки (tsx watch + vite, горячая перезагрузка)
       --no-build      не собирать перед запуском
+      --dry-run       показать баннер и порт, не запуская сервер
   -h, --help          справка
   -v, --version       версия
 ```
@@ -204,7 +219,7 @@ curl http://localhost:3000/v1/chat/completions \
 | --- | --- |
 | `mixr: command not found` | Проверьте `npm link` / `which mixr`; либо запускайте `node bin/mixr.mjs` |
 | `pnpm: command not found` | `corepack enable` |
-| `EADDRINUSE` | Порт занят: `mixr --port 4000` |
+| `EADDRINUSE` | `mixr` обычно обходит занятый порт сам; если запускаете вручную — `mixr --port 4000` |
 | Пустой дашборд | Сначала Models → ➕, затем Providers → ➕, затем ключ в Settings |
 | Нет `dist/` | Уберите `--no-build` или выполните `pnpm build` |
 | Неверный пароль | `ADMIN_PASSWORD=... mixr` (по умолчанию `admin`) |
